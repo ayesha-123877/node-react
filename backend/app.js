@@ -6,12 +6,12 @@ const IdCard = require('./models/IdCard');
 const PhoneNumber = require('./models/PhoneNumber');
 const PhoneAttempt = require('./models/PhoneAttempt');
 
-// ✅ MongoDB connect
+// MongoDB connect
 mongoose.connect('mongodb://localhost:27017/phone_api_db')
   .then(() => console.log(' MongoDB connected'))
   .catch(err => console.error(' MongoDB connection error:', err));
 
-// ✅ Random PK number generator
+// Random PK number generator
 function generatePhoneNumber() {
   const prefix = ['300','301','302','303','304','305','306','307','308','309','310','311','312','313','314','315','316','317','318','319'];
   const randomPrefix = prefix[Math.floor(Math.random() * prefix.length)];
@@ -19,7 +19,7 @@ function generatePhoneNumber() {
   return `${randomPrefix}${randomNum}`;
 }
 
-// ✅ Main function
+// Main function
 async function processNumbers() {
   let bulk = 100;
   let processed = 0;
@@ -34,7 +34,7 @@ async function processNumbers() {
     });
 
     if (recent) {
-      console.log(`⏩ Skipped (already tried): ${phone}`);
+      console.log(`Skipped (already tried): ${phone}`);
       continue;
     }
 
@@ -60,7 +60,7 @@ async function processNumbers() {
       });
 
       // Response check
-      console.log("📦 API Response:", response.data);
+      console.log("API Response:", response.data);
       const data = response.data?.data || response.data; // in case data is nested
 
       if (data?.cnic && data?.name) {
