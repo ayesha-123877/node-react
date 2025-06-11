@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 
-const IdCardSchema = new mongoose.Schema({
-  cnic: { type: String, required: true, unique: true },
-  name: { type: String, required: true }
-});
+const idCardSchema = new mongoose.Schema({
+  cnic: { type: String, unique: true },
+  name: String,
+  phone_numbers: [{ type: String }]
+}, { timestamps: true });
 
-module.exports = mongoose.model('IdCard', IdCardSchema);
+module.exports = mongoose.model('IdCard', idCardSchema);
+
