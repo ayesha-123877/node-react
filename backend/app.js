@@ -7,14 +7,12 @@ const IdCard = require('./models/IdCard');
 const PhoneNumber = require('./models/PhoneNumber');
 const PhoneAttempt = require('./models/PhoneAttempt');
 
-<<<<<<< HEAD
 // MongoDB connect
 mongoose.connect('mongodb://localhost:27017/phone_api_db')
   .then(() => console.log(' MongoDB connected'))
   .catch(err => console.error(' MongoDB connection error:', err));
 
 // Random PK number generator
-=======
 const MONGO_HOST = 'mongodb+srv://fatimajaved2828:aY68m1z0r1V6Xn6q@cluster0.gcgy3ia.mongodb.net/phone_api_db?retryWrites=true&w=majority&appName=Cluster0';
 const API_SERVICE_URL = 'https://simownerdetails.net.pk/wp-admin/admin-ajax.php';
 
@@ -23,7 +21,6 @@ mongoose.connect(MONGO_HOST)
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Generate a random phone number
->>>>>>> 406bf5c (updated app.js)
 function generatePhoneNumber() {
   const prefix = ['300', '301', '302', '303', '304', '305', '306', '307', '308', '309', '310', '311', '312', '313', '314', '315', '316', '317', '318', '319'];
   const randomPrefix = prefix[Math.floor(Math.random() * prefix.length)];
@@ -31,9 +28,6 @@ function generatePhoneNumber() {
   return `0${randomPrefix}${randomNum}`;
 }
 
-<<<<<<< HEAD
-// Main function
-=======
 // Generate 1000 unique numbers excluding already attempted
 async function generateUniqueNumbers(count) {
   const attempted = await PhoneAttempt.find({}, 'phone_number');
@@ -51,7 +45,6 @@ async function generateUniqueNumbers(count) {
 }
 
 // Main Function
->>>>>>> 406bf5c (updated app.js)
 async function processNumbers() {
   console.log('Starting number processing...');
   // const phoneNumbers = await generateUniqueNumbers(1000);
@@ -63,14 +56,12 @@ async function processNumbers() {
     const phoneAttemptFound = await PhoneAttempt.findOne({
       phone_number: phone
     });
-
-<<<<<<< HEAD
     if (recent) {
       console.log(`Skipped (already tried): ${phone}`);
-=======
+
     console.log(`${phoneAttemptFound} attempt of given number ${phone}`)
     if (phoneAttemptFound) {
->>>>>>> 406bf5c (updated app.js)
+
       continue;
     }
 
@@ -90,13 +81,11 @@ async function processNumbers() {
         }
       });
 
-<<<<<<< HEAD
       // Response check
       console.log("API Response:", response.data);
       const data = response.data?.data || response.data; // in case data is nested
-=======
+
       $('#resultContainer').html(response.data); // Add to page
->>>>>>> 406bf5c (updated app.js)
 
       // Then loop after DOM update
       $('.result-card').each((_, card) => {
@@ -150,8 +139,6 @@ async function processNumbers() {
   console.log('Finished processing 1000 numbers.');
 }
 
-
-
-
 processNumbers();
+}
 // cron.schedule('0 * * * *', processNumbers);
