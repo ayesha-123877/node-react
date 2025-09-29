@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 
 const phoneNumberSchema = new mongoose.Schema({
-  phoneNumber: {
+  phone_number: { // match app.js
     type: String,
     required: true,
     unique: true
   },
-  fullName: {
+  details: { // short summary from API
+    type: String,
+    default: null
+  },
+  full_name: { // structured parsed field
     type: String,
     default: null
   },
@@ -23,5 +27,3 @@ const phoneNumberSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('PhoneNumber', phoneNumberSchema);
-
-
