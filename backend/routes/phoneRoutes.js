@@ -1,29 +1,17 @@
 const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
+const router = express.Router();
 const cheerio = require("cheerio");
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 
-const PhoneAttempt = require("./models/PhoneAttempt");
 const PhoneNumber = require("./models/PhoneNumber");
-const { processNumbers } = require("./app"); // import processNumbers()
+const PhoneAttempt = require("./models/PhoneAttempt");
 
 puppeteer.use(StealthPlugin());
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// MongoDB connect
-const MONGO_URI = "mongodb://127.0.0.1:27017/phone_api_db";
-mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("MongoDB connected (server.js)"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
-// ====== BROWSER SETUP ======
 const WEBSITE_URL = "https://simownerdetails.org.pk/sim-database/";
+
+// Global browser instance
 let browser = null;
 
 // Initialize browser
@@ -140,22 +128,19 @@ function parseHtmlData(htmlContent, phone) {
   return null;
 }
 
-// ====== API ROUTES ======
-
-// API: Lookup SIM (Check database first)
-app.get("/api/lookup/:sim", async (req, res) => {
+// Route 1: Check if number exists in database
+router.get("/lookup/:phone", async (req, res) => {
   try {
-    const sim = req.params.sim;
+    const { phone } = req.params;
 
-    if (!/^\d{11}$/.test(sim)) {
+    if (!/^\d{11}$/.test(phone)) {
       return res.status(400).json({
         success: false,
-        error: "Invalid phone number format. Must be 11 digits."
+        message: "Invalid phone number format. Must be 11 digits."
       });
     }
 
-    // Check PhoneNumber collection first (main data)
-    const phoneData = await PhoneNumber.findOne({ phone_number: sim });
+    const phoneData = await PhoneNumber.findOne({ phone_number: phone });
 
     if (phoneData) {
       return res.json({
@@ -169,38 +154,22 @@ app.get("/api/lookup/:sim", async (req, res) => {
       });
     }
 
-    // Fallback: Check PhoneAttempt collection
-    const record = await PhoneAttempt.findOne({ phone_number: sim });
-
-    if (record && record.full_name && record.cnic) {
-      return res.json({
-        success: true,
-        data: {
-          phone_number: record.phone_number,
-          full_name: record.full_name,
-          cnic: record.cnic,
-          address: record.address
-        }
-      });
-    }
-
     return res.status(404).json({
       success: false,
-      error: "SIM not found in database"
+      message: "Number not found in database"
     });
 
-  } catch (err) {
-    console.error("Lookup error:", err);
-    res.status(500).json({
+  } catch (error) {
+    console.error("Database lookup error:", error);
+    return res.status(500).json({
       success: false,
-      error: "Server error",
-      details: err.message,
+      message: "Server error"
     });
   }
 });
 
-// API: Search phone using Puppeteer (if not in DB)
-app.post("/api/search-phone", async (req, res) => {
+// Route 2: Search phone using Puppeteer (if not in DB)
+router.post("/search-phone", async (req, res) => {
   try {
     const { phone_number } = req.body;
 
@@ -211,7 +180,7 @@ app.post("/api/search-phone", async (req, res) => {
       });
     }
 
-    // Check if already exists in PhoneNumber collection
+    // Check if already exists
     const exists = await PhoneNumber.findOne({ phone_number });
     if (exists) {
       return res.json({
@@ -269,7 +238,7 @@ app.post("/api/search-phone", async (req, res) => {
       });
     }
 
-    // Save to PhoneNumber collection (main data)
+    // Save to database
     const savedPhone = await PhoneNumber.create({
       phone_number,
       full_name: parsedData.full_name,
@@ -278,7 +247,7 @@ app.post("/api/search-phone", async (req, res) => {
       details: JSON.stringify(parsedData)
     });
 
-    // Save to PhoneAttempt collection (tracking)
+    // Save to attempts
     await PhoneAttempt.create({
       phone_number,
       full_name: parsedData.full_name,
@@ -318,15 +287,4 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// Start server
-const server = app.listen(5000, () => {
-  console.log("Server running on http://localhost:5000");
-  
-  // Run processNumbers script automatically when server starts
-  console.log("\n🚀 Starting automated number processing...\n");
-  processNumbers().catch(err => {
-    console.error("Error in processNumbers:", err);
-  });
-});
-
-module.exports = server;
+module.exports = router;
