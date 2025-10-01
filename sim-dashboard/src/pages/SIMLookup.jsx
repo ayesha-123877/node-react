@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import API from "../requests";
 
 export default function SIMLookup({ onSearch }) {
   const [sim, setSim] = useState("");
-  const [result, setResult] = useState(null);
+  // ❌ Remove this unused state
+  // const [result, setResult] = useState(null);
   const [error, setError] = useState("");
   const [searchParams] = useSearchParams();
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     const querySim = searchParams.get("sim");
     if (querySim) {
       setSim(querySim);
-      fakeLookup(querySim);
+      lookupSim(querySim);
     }
   }, [searchParams]);
 
@@ -19,24 +22,31 @@ export default function SIMLookup({ onSearch }) {
     e.preventDefault();
     if (!/^\d{11}$/.test(sim)) {
       setError("Please enter a valid 11-digit SIM number.");
-      setResult(null);
       return;
     }
     setError("");
-    fakeLookup(sim);
+    lookupSim(sim);
 
-    // save search to parent history
-    onSearch(sim);
+    if (onSearch) onSearch(sim);
   }
 
-  function fakeLookup(sim) {
-    setResult({
-      sim,
-      owner: "Ali Khan",
-      cnic: "35202-1234567-8",
-      operator: "Jazz",
-      status: "Active",
-    });
+  async function lookupSim(sim) {
+    try {
+      const res = await API.get(`/lookup/${sim}`);
+      if (res.data.success) {
+        setError("");
+        setHistory((prev) => [...prev, res.data]);
+        setSim("");
+      } else {
+        setError("Number not found in database.");
+      }
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setError("Number not found in database.");
+      } else {
+        setError("Error fetching number details.");
+      }
+    }
   }
 
   return (
@@ -60,14 +70,30 @@ export default function SIMLookup({ onSearch }) {
 
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
-      {result && (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h3 className="text-xl font-semibold mb-4">SIM Details</h3>
-          <p><strong>SIM:</strong> {result.sim}</p>
-          <p><strong>Owner:</strong> {result.owner}</p>
-          <p><strong>CNIC:</strong> {result.cnic}</p>
-          <p><strong>Operator:</strong> {result.operator}</p>
-          <p><strong>Status:</strong> {result.status}</p>
+      {history.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white shadow rounded-lg border">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-2 border">SIM</th>
+                <th className="px-4 py-2 border">Owner</th>
+                <th className="px-4 py-2 border">CNIC</th>
+                <th className="px-4 py-2 border">Address</th>
+                <th className="px-4 py-2 border">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((item, index) => (
+                <tr key={index} className="hover:bg-gray-50">
+                  <td className="px-4 py-2 border">{item.sim}</td>
+                  <td className="px-4 py-2 border">{item.owner}</td>
+                  <td className="px-4 py-2 border">{item.cnic}</td>
+                  <td className="px-4 py-2 border">{item.address}</td>
+                  <td className="px-4 py-2 border">{item.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
