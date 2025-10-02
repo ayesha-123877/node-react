@@ -213,7 +213,7 @@ router.post("/search-phone", async (req, res) => {
 
       return res.status(404).json({
         success: false,
-        message: "Failed to fetch data from external source"
+        message: "Failed to fetch data"
       });
     }
 
