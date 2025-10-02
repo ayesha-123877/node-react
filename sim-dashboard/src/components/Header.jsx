@@ -1,9 +1,17 @@
 // src/components/Header.jsx
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function Header() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
+
+  // ✅ agar user info hi nahi hai to login pe redirect
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -11,12 +19,15 @@ export default function Header() {
     navigate("/login");
   }
 
+  // ✅ user ka first letter avatar ke liye
+  const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
+
   return (
     <header className="fixed top-0 left-0 w-full bg-blue-600 text-white shadow-md z-50">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6 py-3">
         
         {/* Company Name */}
-        <h1 
+        <h1
           className="text-xl font-bold tracking-wide cursor-pointer"
           onClick={() => navigate("/dashboard")}
         >
@@ -26,9 +37,12 @@ export default function Header() {
         {/* User Info + Logout */}
         <div className="flex items-center gap-4">
           {user && (
-            <span className="text-sm font-medium">
-              Welcome, {user.name}
-            </span>
+            <>
+              <span className="text-sm font-medium">Welcome, {user.name}</span>
+              <div className="w-9 h-9 rounded-full bg-white text-blue-600 flex items-center justify-center font-bold">
+                {userInitial}
+              </div>
+            </>
           )}
           <button
             onClick={handleLogout}

@@ -1,8 +1,7 @@
 // src/pages/Login.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-const API_URL = "http://localhost:5000/api";
+import API from "../requests"; // ✅ ab hum apna axios instance use karenge
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,7 +10,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ Check if already logged in
+  // ✅ agar token already h to dashboard redirect
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -25,24 +24,22 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
+      const res = await API.post("/auth/login", { email, password });
 
-      if (data.success) {
-        // ✅ Save token and user info (only name instead of id)
-        localStorage.setItem("token", data.data.token);
-        localStorage.setItem("user", JSON.stringify({
-          name: data.data.user.name,
-          email: data.data.user.email,
-        }));
+      if (res.data.success) {
+        // ✅ Save token and user info
+        localStorage.setItem("token", res.data.data.token);
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            name: res.data.data.user.name,
+            email: res.data.data.user.email,
+          })
+        );
 
         navigate("/dashboard");
       } else {
-        setError(data.message || "Invalid credentials");
+        setError(res.data.message || "Invalid credentials");
       }
     } catch (err) {
       setError("Server error. Try again later.");
