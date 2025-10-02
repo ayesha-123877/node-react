@@ -99,7 +99,7 @@ export default function SIMLookup({ onSearch }) {
           type="text"
           value={sim}
           onChange={(e) => setSim(e.target.value)}
-          placeholder="Enter SIM number (0300XXXXXXX)"
+          placeholder="Enter Phone number (0300XXXXXXX)"
           className="flex-1 px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={loading}
         />
