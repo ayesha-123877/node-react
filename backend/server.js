@@ -4,10 +4,13 @@ const cors = require("cors");
 const cheerio = require("cheerio");
 const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+const { body, validationResult } = require('express-validator');
 
 const PhoneAttempt = require("./models/PhoneAttempt");
 const PhoneNumber = require("./models/PhoneNumber");
-const { processNumbers } = require("./app"); // import processNumbers()
+const User = require("./models/User");
+const { authenticate, isAdmin, generateToken } = require("./middleware/auth");
+const { processNumbers } = require("./app");
 
 puppeteer.use(StealthPlugin());
 
@@ -15,18 +18,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connect
+// MongoDB connect with detailed logging
 const MONGO_URI = "mongodb://127.0.0.1:27017/phone_api_db";
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("MongoDB connected (server.js)"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => {
+    console.log("✅ MongoDB connected successfully");
+    console.log("📁 Database name:", mongoose.connection.name);
+  })
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // ====== BROWSER SETUP ======
 const WEBSITE_URL = "https://simownerdetails.org.pk/sim-database/";
 let browser = null;
 
-// Initialize browser
 async function initBrowser() {
   if (!browser) {
     console.log("Launching browser...");
@@ -47,7 +52,6 @@ async function initBrowser() {
   return browser;
 }
 
-// Search phone with Puppeteer
 async function searchPhoneWithPuppeteer(phone) {
   let page = null;
   try {
@@ -55,14 +59,11 @@ async function searchPhoneWithPuppeteer(phone) {
     page = await browserInstance.newPage();
     
     await page.setViewport({ width: 1920, height: 1080 });
-    
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'en-US,en;q=0.9',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     });
 
-    console.log(`Navigating to website for ${phone}...`);
-    
     await page.goto(WEBSITE_URL, {
       waitUntil: 'networkidle2',
       timeout: 60000
@@ -88,7 +89,6 @@ async function searchPhoneWithPuppeteer(phone) {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     const htmlContent = await page.content();
-
     await page.close();
 
     return { success: true, data: htmlContent };
@@ -107,7 +107,6 @@ async function searchPhoneWithPuppeteer(phone) {
   }
 }
 
-// Parse HTML and extract data
 function parseHtmlData(htmlContent, phone) {
   const $ = cheerio.load(htmlContent);
   const resultCard = $(".result-card");
@@ -140,10 +139,177 @@ function parseHtmlData(htmlContent, phone) {
   return null;
 }
 
-// ====== API ROUTES ======
+// ====== AUTHENTICATION ROUTES ======
 
-// API: Lookup SIM (Check database first)
-app.get("/api/lookup/:sim", async (req, res) => {
+// Registration
+app.post("/api/auth/register", [
+  body("name").trim().isLength({ min: 3, max: 50 }).withMessage("Name must be between 3-50 characters"),
+  body("email").isEmail().normalizeEmail().withMessage("Invalid email address"),
+  body("password").isLength({ min: 6 }).withMessage("Password must be at least 6 characters")
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: errors.array()
+      });
+    }
+
+    const { name, email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered. Please login instead."
+      });
+    }
+
+    const user = await User.create({
+      name,
+      email,
+      password
+    });
+
+    const token = generateToken(user._id);
+
+    console.log(`✅ New user registered: ${email}`);
+
+    res.status(201).json({
+      success: true,
+      message: "Registration successful!",
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role
+        },
+        token
+      }
+    });
+
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Registration failed. Please try again.",
+      error: error.message
+    });
+  }
+});
+
+// Login
+app.post("/api/auth/login", [
+  body("email").isEmail().normalizeEmail().withMessage("Invalid email"),
+  body("password").notEmpty().withMessage("Password is required")
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: errors.array()
+      });
+    }
+
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    if (!user.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: "Your account has been deactivated. Please contact support."
+      });
+    }
+
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    user.lastLogin = new Date();
+    await user.save();
+
+    const token = generateToken(user._id);
+
+    console.log(`✅ User logged in: ${email}`);
+
+    res.json({
+      success: true,
+      message: "Login successful!",
+      data: {
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role
+        },
+        token
+      }
+    });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Login failed. Please try again."
+    });
+  }
+});
+
+// Get current user profile
+app.get("/api/auth/me", authenticate, async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: {
+        user: req.user
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch user profile"
+    });
+  }
+});
+
+// Logout
+app.post("/api/auth/logout", authenticate, async (req, res) => {
+  try {
+    console.log(`✅ User logged out: ${req.user.email}`);
+    
+    res.json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Logout failed"
+    });
+  }
+});
+
+// ====== PROTECTED API ROUTES ======
+
+// Lookup SIM
+app.get("/api/lookup/:sim", authenticate, async (req, res) => {
   try {
     const sim = req.params.sim;
 
@@ -154,7 +320,6 @@ app.get("/api/lookup/:sim", async (req, res) => {
       });
     }
 
-    // Check PhoneNumber collection first (main data)
     const phoneData = await PhoneNumber.findOne({ phone_number: sim });
 
     if (phoneData) {
@@ -169,7 +334,6 @@ app.get("/api/lookup/:sim", async (req, res) => {
       });
     }
 
-    // Fallback: Check PhoneAttempt collection
     const record = await PhoneAttempt.findOne({ phone_number: sim });
 
     if (record && record.full_name && record.cnic) {
@@ -199,8 +363,8 @@ app.get("/api/lookup/:sim", async (req, res) => {
   }
 });
 
-// API: Search phone using Puppeteer (if not in DB)
-app.post("/api/search-phone", async (req, res) => {
+// Search phone
+app.post("/api/search-phone", authenticate, async (req, res) => {
   try {
     const { phone_number } = req.body;
 
@@ -211,9 +375,11 @@ app.post("/api/search-phone", async (req, res) => {
       });
     }
 
-    // Check if already exists in PhoneNumber collection
+    console.log(`🔍 User ${req.user.email} searching for: ${phone_number}`);
+
     const exists = await PhoneNumber.findOne({ phone_number });
     if (exists) {
+      console.log(`✅ Found in database: ${phone_number}`);
       return res.json({
         success: true,
         data: {
@@ -226,12 +392,10 @@ app.post("/api/search-phone", async (req, res) => {
       });
     }
 
-    // Fetch using Puppeteer
-    console.log(`Fetching data for ${phone_number} using Puppeteer...`);
+    console.log(`🌐 Fetching from website: ${phone_number}`);
     const apiResult = await searchPhoneWithPuppeteer(phone_number);
 
     if (!apiResult.success) {
-      // Save failed attempt
       await PhoneAttempt.create({
         phone_number,
         full_name: null,
@@ -248,11 +412,9 @@ app.post("/api/search-phone", async (req, res) => {
       });
     }
 
-    // Parse the HTML
     const parsedData = parseHtmlData(apiResult.data, phone_number);
 
     if (!parsedData) {
-      // Save attempt with no data
       await PhoneAttempt.create({
         phone_number,
         full_name: null,
@@ -269,7 +431,6 @@ app.post("/api/search-phone", async (req, res) => {
       });
     }
 
-    // Save to PhoneNumber collection (main data)
     const savedPhone = await PhoneNumber.create({
       phone_number,
       full_name: parsedData.full_name,
@@ -278,7 +439,6 @@ app.post("/api/search-phone", async (req, res) => {
       details: JSON.stringify(parsedData)
     });
 
-    // Save to PhoneAttempt collection (tracking)
     await PhoneAttempt.create({
       phone_number,
       full_name: parsedData.full_name,
@@ -288,6 +448,8 @@ app.post("/api/search-phone", async (req, res) => {
       raw_html: apiResult.data,
       attempted_at: new Date()
     });
+
+    console.log(`✅ Data saved for: ${phone_number}`);
 
     return res.json({
       success: true,
@@ -309,21 +471,48 @@ app.post("/api/search-phone", async (req, res) => {
   }
 });
 
-// Cleanup on server shutdown
+// ====== ADMIN ROUTES ======
+
+app.get("/api/admin/users", authenticate, isAdmin, async (req, res) => {
+  try {
+    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      data: {
+        users,
+        count: users.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch users"
+    });
+  }
+});
+
+// Cleanup
 process.on('SIGINT', async () => {
   if (browser) {
     await browser.close();
     console.log('Browser closed');
   }
+  await mongoose.connection.close();
+  console.log('MongoDB connection closed');
   process.exit(0);
 });
 
 // Start server
 const server = app.listen(5000, () => {
-  console.log("Server running on http://localhost:5000");
+  console.log("\n🚀 Server running on http://localhost:5000");
+  console.log("📱 SIM Tracker API with Authentication\n");
   
-  // Run processNumbers script automatically when server starts
-  console.log("\n🚀 Starting automated number processing...\n");
+  if (mongoose.connection.readyState === 1) {
+    console.log("✅ MongoDB is ready\n");
+  }
+  
+  console.log("🔄 Starting automated number processing...\n");
   processNumbers().catch(err => {
     console.error("Error in processNumbers:", err);
   });

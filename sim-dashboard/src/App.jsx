@@ -1,11 +1,14 @@
 // src/App.jsx
 import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Footer from "./components/Footer";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Pages
+import Register from "./pages/Register";
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import SIMLookup from "./pages/SIMLookup";
 import CNICLookup from "./pages/CNICLookup";
@@ -14,40 +17,95 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 
 function App() {
-  // 🆕 shared history state
   const [history, setHistory] = useState([]);
+  const location = useLocation();
 
   function handleSearch(newSim) {
     setHistory((prev) => [...prev, newSim]);
   }
 
+  // check if we are on login/register page
+  const hideLayout =
+    location.pathname === "/login" || location.pathname === "/register";
+
   return (
     <div>
-      {/* Fixed Header */}
-      <Header />
-      {/* Fixed Sidebar */}
-      <Sidebar />
+      {/* Show header + sidebar only if NOT login/register */}
+      {!hideLayout && <Header />}
+      {!hideLayout && <Sidebar />}
 
-      {/* Main content area */}
-      <main className="ml-64 pt-14 p-6 bg-white min-h-screen">
+      <main
+        className={
+          !hideLayout ? "ml-64 pt-14 p-6 bg-white min-h-screen" : "min-h-screen"
+        }
+      >
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          
-          {/* pass handleSearch into SIMLookup */}
-          <Route path="/simlookup" element={<SIMLookup onSearch={handleSearch} />} />
+          {/* Public routes */}
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
 
-          <Route path="/cniclookup" element={<CNICLookup />} />
-          
-          {/* pass history into History */}
-          <Route path="/history" element={<History history={history} />} />
-
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={<Settings />} />
+          {/* Protected routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/simlookup"
+            element={
+              <ProtectedRoute>
+                <SIMLookup onSearch={handleSearch} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cniclookup"
+            element={
+              <ProtectedRoute>
+                <CNICLookup />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/history"
+            element={
+              <ProtectedRoute>
+                <History history={history} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <Reports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
 
-      <Footer />
+      {/* Footer only if NOT login/register */}
+      {!hideLayout && <Footer />}
     </div>
   );
 }

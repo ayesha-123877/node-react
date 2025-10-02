@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -5,6 +6,7 @@ export default function Dashboard() {
   const [recent, setRecent] = useState([]);
   const navigate = useNavigate();
 
+  // quick lookup form
   function handleQuickLookup(e) {
     e.preventDefault();
     const sim = e.target.sim.value.trim();
@@ -13,19 +15,14 @@ export default function Dashboard() {
       return;
     }
     setRecent([sim, ...recent.slice(0, 4)]); // store max 5
-    navigate(`/simlookup?sim=${sim}`); // redirect to full page
+    navigate(`/simlookup?sim=${sim}`); // redirect to SIM lookup page
   }
 
   return (
-    <main className="p-6 pt-20"> 
-      {/* pt-20 = same spacing as sidebar ka top padding */}
-
+    <main className="p-6 pt-20">
       <h2 className="text-2xl font-bold mb-4">📊 Dashboard</h2>
-      <p className="mb-6">
-        Welcome to your SIM Dashboard. Quick overview and shortcuts below.
-      </p>
 
-      {/* Quick SIM Lookup (mini form) */}
+      {/* Quick SIM Lookup form */}
       <form
         onSubmit={handleQuickLookup}
         className="flex gap-2 max-w-lg mb-6"
@@ -44,8 +41,8 @@ export default function Dashboard() {
         </button>
       </form>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      {/* Stats cards (Reports removed) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
         <div className="bg-blue-600 text-white p-6 rounded-xl shadow">
           <h3 className="text-lg font-semibold">🔎 SIM Lookups</h3>
           <p className="text-2xl font-bold">152</p>
@@ -53,10 +50,6 @@ export default function Dashboard() {
         <div className="bg-green-600 text-white p-6 rounded-xl shadow">
           <h3 className="text-lg font-semibold">📅 Today’s Searches</h3>
           <p className="text-2xl font-bold">12</p>
-        </div>
-        <div className="bg-yellow-500 text-white p-6 rounded-xl shadow">
-          <h3 className="text-lg font-semibold">🧾 Reports</h3>
-          <p className="text-2xl font-bold">45</p>
         </div>
         <div className="bg-purple-600 text-white p-6 rounded-xl shadow">
           <h3 className="text-lg font-semibold">🪪 CNIC Records</h3>
@@ -78,18 +71,15 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white shadow rounded-lg p-4">
-        <h3 className="text-lg font-semibold mb-2">Quick Actions</h3>
+      {/* Quick Actions (Generate Report removed) */}
+      <div className="bg-white shadow rounded-lg p-4 flex flex-col gap-4">
+        <h3 className="text-lg font-semibold">Quick Actions</h3>
         <div className="flex gap-4">
           <button
             onClick={() => navigate("/simlookup")}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Go to SIM Lookup
-          </button>
-          <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-            Generate Report
           </button>
         </div>
       </div>

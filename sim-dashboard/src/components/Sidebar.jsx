@@ -9,7 +9,6 @@ export default function Sidebar() {
     { to: "/simlookup", label: "🔍 SIM Lookup" },
     { to: "/cniclookup", label: "🆔 CNIC Lookup" },
     { to: "/history", label: "📜 History" },
-    { to: "/reports", label: "📈 Reports" },
     { to: "/settings", label: "⚙️ Settings" },
   ];
 
