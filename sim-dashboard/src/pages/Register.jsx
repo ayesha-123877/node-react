@@ -33,16 +33,30 @@ export default function Register() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
+
       const data = await res.json();
 
+      if (!res.ok) {
+        // 🎯 status code ke hisaab se error messages
+        if (res.status === 400) {
+          setError(data.message || "Invalid input");
+        } else if (res.status === 401) {
+          setError("Unauthorized. Please check your credentials.");
+        } else if (res.status === 500) {
+          setError("Server error. Try again later.");
+        } else {
+          setError(data.message || "Something went wrong.");
+        }
+        return;
+      }
+
+      // ✅ Success case
       if (data.success) {
         setSuccess("Registration successful! Please login.");
         setTimeout(() => navigate("/login"), 1500);
-      } else {
-        setError(data.message || "Registration failed");
       }
     } catch (err) {
-      setError("Server error. Try again later.");
+      setError("Network error. Please check your connection.");
       console.error("Registration error:", err);
     } finally {
       setLoading(false);

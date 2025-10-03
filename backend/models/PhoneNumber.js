@@ -23,7 +23,7 @@ const phoneNumberSchema = new mongoose.Schema({
     default: null
   }
 }, {
-  timestamps: true
+  timestamps: true // automatically adds createdAt and updatedAt
 });
 
 module.exports = mongoose.model('PhoneNumber', phoneNumberSchema);

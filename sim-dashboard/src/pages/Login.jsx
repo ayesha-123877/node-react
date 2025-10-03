@@ -1,7 +1,7 @@
 // src/pages/Login.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../requests"; // ✅ ab hum apna axios instance use karenge
+import API from "../requests"; // ✅ apna axios instance use ho raha hai
 
 export default function Login() {
   const navigate = useNavigate();
@@ -42,7 +42,20 @@ export default function Login() {
         setError(res.data.message || "Invalid credentials");
       }
     } catch (err) {
-      setError("Server error. Try again later.");
+      // 🎯 Axios error handling with status codes
+      if (err.response) {
+        if (err.response.status === 400) {
+          setError(err.response.data.message || "Invalid input");
+        } else if (err.response.status === 401) {
+          setError(err.response.data.message || "Incorrect email or password");
+        } else if (err.response.status === 500) {
+          setError("Server error. Try again later.");
+        } else {
+          setError("Something went wrong. Please try again.");
+        }
+      } else {
+        setError("Network error. Please check your connection.");
+      }
       console.error("Login error:", err);
     } finally {
       setLoading(false);
