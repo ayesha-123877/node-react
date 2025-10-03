@@ -9,6 +9,7 @@ const { body, validationResult } = require('express-validator');
 const PhoneAttempt = require("./models/PhoneAttempt");
 const PhoneNumber = require("./models/PhoneNumber");
 const User = require("./models/User");
+const SearchHistory = require("./models/SearchHistory");
 const { authenticate, isAdmin, generateToken } = require("./middleware/auth");
 const { processNumbers } = require("./app");
 
@@ -308,6 +309,8 @@ app.post("/api/auth/logout", authenticate, async (req, res) => {
 
 // ====== PROTECTED API ROUTES ======
 
+// ====== PROTECTED API ROUTES ======
+
 // Lookup SIM
 app.get("/api/lookup/:sim", authenticate, async (req, res) => {
   try {
@@ -323,6 +326,19 @@ app.get("/api/lookup/:sim", authenticate, async (req, res) => {
     const phoneData = await PhoneNumber.findOne({ phone_number: sim });
 
     if (phoneData) {
+      // Save to search history with user details
+      await SearchHistory.create({
+        userId: req.user._id,
+        userName: req.user.name,
+        userEmail: req.user.email,
+        phone_number: phoneData.phone_number,
+        full_name: phoneData.full_name,
+        cnic: phoneData.cnic,
+        address: phoneData.address,
+        source: "database",
+        status: "found"
+      });
+
       return res.json({
         success: true,
         data: {
@@ -337,6 +353,19 @@ app.get("/api/lookup/:sim", authenticate, async (req, res) => {
     const record = await PhoneAttempt.findOne({ phone_number: sim });
 
     if (record && record.full_name && record.cnic) {
+      // Save to search history with user details
+      await SearchHistory.create({
+        userId: req.user._id,
+        userName: req.user.name,
+        userEmail: req.user.email,
+        phone_number: record.phone_number,
+        full_name: record.full_name,
+        cnic: record.cnic,
+        address: record.address,
+        source: "database",
+        status: "found"
+      });
+
       return res.json({
         success: true,
         data: {
@@ -347,6 +376,19 @@ app.get("/api/lookup/:sim", authenticate, async (req, res) => {
         }
       });
     }
+
+    // Save to history even when not found
+    await SearchHistory.create({
+      userId: req.user._id,
+      userName: req.user.name,
+      userEmail: req.user.email,
+      phone_number: sim,
+      full_name: null,
+      cnic: null,
+      address: null,
+      source: "lookup",
+      status: "not_found"
+    });
 
     return res.status(404).json({
       success: false,
@@ -379,6 +421,19 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
 
     const exists = await PhoneNumber.findOne({ phone_number });
     if (exists) {
+      // Save to search history with user details
+      await SearchHistory.create({
+        userId: req.user._id,
+        userName: req.user.name,
+        userEmail: req.user.email,
+        phone_number: exists.phone_number,
+        full_name: exists.full_name,
+        cnic: exists.cnic,
+        address: exists.address,
+        source: "database",
+        status: "found"
+      });
+
       console.log(`Number Found : ${phone_number}`);
       return res.json({
         success: true,
@@ -392,7 +447,7 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
       });
     }
 
-    console.log(`Loading  ${phone_number}`);
+    console.log(`Loading ${phone_number}`);
     const apiResult = await searchPhoneWithPuppeteer(phone_number);
 
     if (!apiResult.success) {
@@ -404,6 +459,20 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
         details: { error: apiResult.error },
         raw_html: null,
         attempted_at: new Date()
+      });
+
+      // Save to history even when API fails
+      await SearchHistory.create({
+        userId: req.user._id,
+        userName: req.user.name,
+        userEmail: req.user.email,
+        phone_number,
+        full_name: null,
+        cnic: null,
+        address: null,
+        source: "api",
+        status: "not_found",
+        errorMessage: apiResult.error
       });
 
       return res.status(404).json({
@@ -423,6 +492,19 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
         details: {},
         raw_html: apiResult.data,
         attempted_at: new Date()
+      });
+
+      // Save to history when data not found
+      await SearchHistory.create({
+        userId: req.user._id,
+        userName: req.user.name,
+        userEmail: req.user.email,
+        phone_number,
+        full_name: null,
+        cnic: null,
+        address: null,
+        source: "api",
+        status: "not_found"
       });
 
       return res.status(404).json({
@@ -449,6 +531,19 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
       attempted_at: new Date()
     });
 
+    // Save to search history with user details
+    await SearchHistory.create({
+      userId: req.user._id,
+      userName: req.user.name,
+      userEmail: req.user.email,
+      phone_number: savedPhone.phone_number,
+      full_name: savedPhone.full_name,
+      cnic: savedPhone.cnic,
+      address: savedPhone.address,
+      source: "api",
+      status: "found"
+    });
+
     console.log(`✅ Data saved for: ${phone_number}`);
 
     return res.json({
@@ -471,8 +566,105 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
   }
 });
 
+// ====== SEARCH HISTORY ROUTES ======
+
+// Get user's search history
+app.get("/api/history", authenticate, async (req, res) => {
+  try {
+    const history = await SearchHistory.find({ userId: req.user._id })
+      .sort({ searchedAt: -1 })
+      .limit(100); // Last 100 searches
+
+    res.json({
+      success: true,
+      data: history
+    });
+  } catch (error) {
+    console.error("History fetch error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch search history"
+    });
+  }
+});
+
+// Get specific history item details
+app.get("/api/history/:id", authenticate, async (req, res) => {
+  try {
+    const history = await SearchHistory.findOne({
+      _id: req.params.id,
+      userId: req.user._id // Ensure user can only access their own history
+    });
+
+    if (!history) {
+      return res.status(404).json({
+        success: false,
+        message: "History item not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      data: history
+    });
+  } catch (error) {
+    console.error("History item fetch error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch history item"
+    });
+  }
+});
+
+// Delete specific history item
+app.delete("/api/history/:id", authenticate, async (req, res) => {
+  try {
+    const result = await SearchHistory.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "History item not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "History item deleted successfully"
+    });
+  } catch (error) {
+    console.error("History delete error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete history item"
+    });
+  }
+});
+
+// Clear all history for user
+app.delete("/api/history", authenticate, async (req, res) => {
+  try {
+    const result = await SearchHistory.deleteMany({ userId: req.user._id });
+
+    res.json({
+      success: true,
+      message: `Deleted ${result.deletedCount} history items`
+    });
+  } catch (error) {
+    console.error("Clear history error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to clear history"
+    });
+  }
+});
+
 // ====== ADMIN ROUTES ======
 
+// Get all users (Admin only)
 app.get("/api/admin/users", authenticate, isAdmin, async (req, res) => {
   try {
     const users = await User.find().select("-password").sort({ createdAt: -1 });
@@ -488,6 +680,80 @@ app.get("/api/admin/users", authenticate, isAdmin, async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch users"
+    });
+  }
+});
+
+// Get all search history (Admin only)
+app.get("/api/admin/all-history", authenticate, isAdmin, async (req, res) => {
+  try {
+    const history = await SearchHistory.find()
+      .populate("userId", "name email")
+      .sort({ searchedAt: -1 })
+      .limit(500);
+
+    res.json({
+      success: true,
+      data: {
+        history,
+        count: history.length
+      }
+    });
+  } catch (error) {
+    console.error("Admin history fetch error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch search history"
+    });
+  }
+});
+
+// Get statistics (Admin only)
+app.get("/api/admin/stats", authenticate, isAdmin, async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalSearches = await SearchHistory.countDocuments();
+    const totalNumbers = await PhoneNumber.countDocuments();
+    const totalAttempts = await PhoneAttempt.countDocuments();
+
+    const recentSearches = await SearchHistory.find()
+      .sort({ searchedAt: -1 })
+      .limit(5)
+      .populate("userId", "name email");
+
+    const topUsers = await SearchHistory.aggregate([
+      {
+        $group: {
+          _id: "$userId",
+          searchCount: { $sum: 1 }
+        }
+      },
+      { $sort: { searchCount: -1 } },
+      { $limit: 5 }
+    ]);
+
+    // Populate user details for top users
+    const populatedTopUsers = await User.populate(topUsers, {
+      path: "_id",
+      select: "name email"
+    });
+
+    res.json({
+      success: true,
+      data: {
+        totalUsers,
+        totalSearches,
+        totalNumbers,
+        totalAttempts,
+        recentSearches,
+        topUsers: populatedTopUsers
+      }
+    });
+  } catch (error) {
+    console.error("Admin stats error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch statistics"
     });
   }
 });
