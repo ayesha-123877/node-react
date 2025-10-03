@@ -23,6 +23,7 @@ redis.on("error", (err) => console.error("Redis error:", err));
 
 const WEBSITE_URL = "https://simownerdetails.org.pk/sim-database/";
 
+
 // Global browser instance
 let browser = null;
 
@@ -120,7 +121,7 @@ async function searchPhoneWithPuppeteer(phone) {
     // Wait for the search input to be visible
     await page.waitForSelector('input[name="searchdata"]', { timeout: 10000 });
     
-    console.log("✓ Search input found");
+    console.log("Search input found");
 
     // Remove leading 0 from phone number (as per website documentation)
     const phoneForSearch = phone.startsWith('0') ? phone.substring(1) : phone;
@@ -305,5 +306,6 @@ async function processNumbers() {
   console.log("Finished processing all numbers");
   console.log("=".repeat(60));
 }
+
 
 module.exports = { processNumbers };

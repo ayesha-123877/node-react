@@ -24,7 +24,7 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log("✅ MongoDB connected successfully");
-    console.log("📁 Database name:", mongoose.connection.name);
+    // console.log("📁 Database name:", mongoose.connection.name);
   })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
@@ -350,7 +350,7 @@ app.get("/api/lookup/:sim", authenticate, async (req, res) => {
 
     return res.status(404).json({
       success: false,
-      error: "SIM not found in database"
+      error: "Number not found"
     });
 
   } catch (err) {
@@ -379,7 +379,7 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
 
     const exists = await PhoneNumber.findOne({ phone_number });
     if (exists) {
-      console.log(`✅ Found in database: ${phone_number}`);
+      console.log(`Number Found : ${phone_number}`);
       return res.json({
         success: true,
         data: {
@@ -392,7 +392,7 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
       });
     }
 
-    console.log(`🌐 Fetching from website: ${phone_number}`);
+    console.log(`Loading  ${phone_number}`);
     const apiResult = await searchPhoneWithPuppeteer(phone_number);
 
     if (!apiResult.success) {
@@ -408,7 +408,7 @@ app.post("/api/search-phone", authenticate, async (req, res) => {
 
       return res.status(404).json({
         success: false,
-        message: "Failed to fetch data from external source"
+        message: "Failed to fetch data"
       });
     }
 
