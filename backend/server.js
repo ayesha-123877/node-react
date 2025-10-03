@@ -11,7 +11,8 @@ const PhoneNumber = require("./models/PhoneNumber");
 const User = require("./models/User");
 const { authenticate, isAdmin, generateToken } = require("./middleware/auth");
 const { processNumbers } = require("./app");
-
+const dashboardStats = require("./routes/dashboardStats");
+const searchPhone = require("./routes/searchPhone");
 puppeteer.use(StealthPlugin());
 
 const app = express();
@@ -140,7 +141,8 @@ function parseHtmlData(htmlContent, phone) {
 }
 
 // ====== AUTHENTICATION ROUTES ======
-
+app.use("/api/dashboard", dashboardStats);
+app.use("/api", searchPhone);
 // Registration
 app.post("/api/auth/register", [
   body("name").trim().isLength({ min: 3, max: 50 }).withMessage("Name must be between 3-50 characters"),
@@ -364,112 +366,112 @@ app.get("/api/lookup/:sim", authenticate, async (req, res) => {
 });
 
 // Search phone
-app.post("/api/search-phone", authenticate, async (req, res) => {
-  try {
-    const { phone_number } = req.body;
+// app.post("/api/search-phone", authenticate, async (req, res) => {
+//   try {
+//     const { phone_number } = req.body;
 
-    if (!phone_number || !/^\d{11}$/.test(phone_number)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid phone number format. Must be 11 digits."
-      });
-    }
+//     if (!phone_number || !/^\d{11}$/.test(phone_number)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid phone number format. Must be 11 digits."
+//       });
+//     }
 
-    console.log(`🔍 User ${req.user.email} searching for: ${phone_number}`);
+//     console.log(`🔍 User ${req.user.email} searching for: ${phone_number}`);
 
-    const exists = await PhoneNumber.findOne({ phone_number });
-    if (exists) {
-      console.log(`Number Found : ${phone_number}`);
-      return res.json({
-        success: true,
-        data: {
-          phone_number: exists.phone_number,
-          full_name: exists.full_name,
-          cnic: exists.cnic,
-          address: exists.address
-        },
-        source: "database"
-      });
-    }
+//     const exists = await PhoneNumber.findOne({ phone_number });
+//     if (exists) {
+//       console.log(`Number Found : ${phone_number}`);
+//       return res.json({
+//         success: true,
+//         data: {
+//           phone_number: exists.phone_number,
+//           full_name: exists.full_name,
+//           cnic: exists.cnic,
+//           address: exists.address
+//         },
+//         source: "database"
+//       });
+//     }
 
-    console.log(`Loading  ${phone_number}`);
-    const apiResult = await searchPhoneWithPuppeteer(phone_number);
+//     console.log(`Loading  ${phone_number}`);
+//     const apiResult = await searchPhoneWithPuppeteer(phone_number);
 
-    if (!apiResult.success) {
-      await PhoneAttempt.create({
-        phone_number,
-        full_name: null,
-        cnic: null,
-        address: null,
-        details: { error: apiResult.error },
-        raw_html: null,
-        attempted_at: new Date()
-      });
+//     if (!apiResult.success) {
+//       await PhoneAttempt.create({
+//         phone_number,
+//         full_name: null,
+//         cnic: null,
+//         address: null,
+//         details: { error: apiResult.error },
+//         raw_html: null,
+//         attempted_at: new Date()
+//       });
 
-      return res.status(404).json({
-        success: false,
-        message: "Failed to fetch data"
-      });
-    }
+//       return res.status(404).json({
+//         success: false,
+//         message: "Failed to fetch data"
+//       });
+//     }
 
-    const parsedData = parseHtmlData(apiResult.data, phone_number);
+//     const parsedData = parseHtmlData(apiResult.data, phone_number);
 
-    if (!parsedData) {
-      await PhoneAttempt.create({
-        phone_number,
-        full_name: null,
-        cnic: null,
-        address: null,
-        details: {},
-        raw_html: apiResult.data,
-        attempted_at: new Date()
-      });
+//     if (!parsedData) {
+//       await PhoneAttempt.create({
+//         phone_number,
+//         full_name: null,
+//         cnic: null,
+//         address: null,
+//         details: {},
+//         raw_html: apiResult.data,
+//         attempted_at: new Date()
+//       });
 
-      return res.status(404).json({
-        success: false,
-        message: "No data found for this number"
-      });
-    }
+//       return res.status(404).json({
+//         success: false,
+//         message: "No data found for this number"
+//       });
+//     }
 
-    const savedPhone = await PhoneNumber.create({
-      phone_number,
-      full_name: parsedData.full_name,
-      cnic: parsedData.cnic,
-      address: parsedData.address,
-      details: JSON.stringify(parsedData)
-    });
+//     const savedPhone = await PhoneNumber.create({
+//       phone_number,
+//       full_name: parsedData.full_name,
+//       cnic: parsedData.cnic,
+//       address: parsedData.address,
+//       details: JSON.stringify(parsedData)
+//     });
 
-    await PhoneAttempt.create({
-      phone_number,
-      full_name: parsedData.full_name,
-      cnic: parsedData.cnic,
-      address: parsedData.address,
-      details: parsedData,
-      raw_html: apiResult.data,
-      attempted_at: new Date()
-    });
+//     await PhoneAttempt.create({
+//       phone_number,
+//       full_name: parsedData.full_name,
+//       cnic: parsedData.cnic,
+//       address: parsedData.address,
+//       details: parsedData,
+//       raw_html: apiResult.data,
+//       attempted_at: new Date()
+//     });
 
-    console.log(`✅ Data saved for: ${phone_number}`);
+//     console.log(`✅ Data saved for: ${phone_number}`);
 
-    return res.json({
-      success: true,
-      data: {
-        phone_number: savedPhone.phone_number,
-        full_name: savedPhone.full_name,
-        cnic: savedPhone.cnic,
-        address: savedPhone.address
-      },
-      source: "api"
-    });
+//     return res.json({
+//       success: true,
+//       data: {
+//         phone_number: savedPhone.phone_number,
+//         full_name: savedPhone.full_name,
+//         cnic: savedPhone.cnic,
+//         address: savedPhone.address
+//       },
+//       source: "api"
+//     });
 
-  } catch (error) {
-    console.error("Search phone error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Server error during search"
-    });
-  }
-});
+//   } catch (error) {
+//     console.error("Search phone error:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Server error during search"
+//     });
+//   }
+// });
 
 // ====== ADMIN ROUTES ======
 
