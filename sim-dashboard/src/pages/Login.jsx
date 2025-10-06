@@ -1,7 +1,7 @@
 // src/pages/Login.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../requests"; // ✅ apna axios instance use ho raha hai
+import API from "../requests"; //  apna axios instance use ho raha hai
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ✅ agar token already h to dashboard redirect
+  // agar token already h to dashboard redirect
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -27,7 +27,7 @@ export default function Login() {
       const res = await API.post("/auth/login", { email, password });
 
       if (res.data.success) {
-        // ✅ Save token and user info
+        //  Save token and user info
         localStorage.setItem("token", res.data.data.token);
         localStorage.setItem(
           "user",
@@ -42,7 +42,7 @@ export default function Login() {
         setError(res.data.message || "Invalid credentials");
       }
     } catch (err) {
-      // 🎯 Axios error handling with status codes
+      //  Axios error handling with status codes
       if (err.response) {
         if (err.response.status === 400) {
           setError(err.response.data.message || "Invalid input");

@@ -65,9 +65,10 @@ export default function History() {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto p-8">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 border-l-8 border-blue-600 pl-4 py-2 bg-white shadow-sm rounded-r-lg inline-block">
-           Search History
-        </h2>
+       <h2 className="text-3xl font-bold mb-6 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-8 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
+  Search History
+</h2>
+
         <div className="flex items-center justify-center py-12">
           <svg
             className="animate-spin h-8 w-8 text-blue-600"
@@ -99,9 +100,10 @@ export default function History() {
   return (
     <div className="max-w-6xl mx-auto p-8">
       {/* Heading */}
-      <h2 className="text-3xl font-bold mb-4 text-gray-800 border-l-8 border-blue-600 pl-4 py-2 bg-white shadow-sm rounded-r-lg inline-block">
-         Search History
-      </h2>
+    <h2 className="text-3xl font-bold mb-6 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-8 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
+  Search History
+</h2>
+
      
 
       {error && (

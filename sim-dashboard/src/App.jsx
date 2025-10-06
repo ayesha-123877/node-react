@@ -13,7 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import SIMLookup from "./pages/SIMLookup";
 import CNICLookup from "./pages/CNICLookup";
 import History from "./pages/History";
-import Reports from "./pages/Reports";
+
 import Settings from "./pages/Settings";
 
 function App() {
@@ -85,14 +85,9 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/reports"
-            element={
-              <ProtectedRoute>
-                <Reports />
-              </ProtectedRoute>
-            }
-          />
+          
+          
+          
           <Route
             path="/settings"
             element={

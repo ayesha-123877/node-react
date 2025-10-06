@@ -13,7 +13,7 @@ export default function Register() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // ✅ Redirect if already logged in
+  //  Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -37,7 +37,7 @@ export default function Register() {
       const data = await res.json();
 
       if (!res.ok) {
-        // 🎯 status code ke hisaab se error messages
+        //  status code ke hisaab se error messages
         if (res.status === 400) {
           setError(data.message || "Invalid input");
         } else if (res.status === 401) {
@@ -50,7 +50,7 @@ export default function Register() {
         return;
       }
 
-      // ✅ Success case
+      //  Success case
       if (data.success) {
         setSuccess("Registration successful! Please login.");
         setTimeout(() => navigate("/login"), 1500);

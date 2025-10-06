@@ -27,11 +27,11 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <main className="p-8 pt-20 bg-gray-50 min-h-screen">
-      {/* Dashboard Heading */}
-      <h2 className="text-3xl font-bold mb-10 text-gray-800 border-l-8 border-blue-600 pl-4 py-2 bg-white shadow-sm rounded-r-lg inline-block">
-        Dashboard
-      </h2>
+    <main className="p-8 pt-16 bg-gray-50 min-h-screen">
+   <h2 className="text-3xl font-bold mb-10 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-8 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
+  Dashboard
+</h2>
+
 
       {/* Stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
@@ -54,9 +54,11 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="bg-white shadow-md rounded-2xl p-8 border border-gray-200">
-        <h3 className="text-xl font-semibold mb-4 text-gray-800 border-l-4 border-blue-500 pl-3">
-          ⚡ Quick Actions
-        </h3>
+       <h3 className="text-2xl font-semibold mb-6 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-6 py-3 rounded-2xl shadow-md border border-blue-200 inline-block">
+  Quick Actions
+</h3>
+
+
         <div className="flex gap-4">
           <button
             onClick={() => navigate("/simlookup")}
