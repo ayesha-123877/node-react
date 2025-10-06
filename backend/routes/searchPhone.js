@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const PhoneNumber = require("../models/PhoneNumber");
-const PhoneAttempt = require("../models/PhoneAttempt");
+const SearchHistory = require("../models/SearchHistory");
 const { authenticate } = require("../middleware/auth");
 const { searchPhoneWithPuppeteer, parseHtmlData } = require("../app");
 
@@ -9,8 +9,9 @@ const { searchPhoneWithPuppeteer, parseHtmlData } = require("../app");
 router.post("/search-phone", authenticate, async (req, res) => {
   try {
     const { phone_number } = req.body;
+    const user = req.user; // authenticated user from middleware
 
-    // validate number
+    // Validate number
     if (!phone_number || !/^\d{11}$/.test(phone_number)) {
       return res.status(400).json({
         success: false,
@@ -21,8 +22,10 @@ router.post("/search-phone", authenticate, async (req, res) => {
     let savedPhone = await PhoneNumber.findOne({ phone_number });
     let parsedData = null;
     let source = "database";
+    let status = "found";
+    let errorMessage = null;
 
-    // if not in DB → fetch
+    // If not in DB → fetch from API
     if (!savedPhone) {
       const apiResult = await searchPhoneWithPuppeteer(phone_number);
 
@@ -39,29 +42,40 @@ router.post("/search-phone", authenticate, async (req, res) => {
 
         source = "api";
       } else {
-        // log failed attempt also
-        await PhoneAttempt.create({
+        status = "not_found";
+        errorMessage = apiResult.error || "No data found";
+        
+        // Log failed search in SearchHistory
+        await SearchHistory.create({
+          userId: user._id,
+          userName: user.name,
+          userEmail: user.email,
           phone_number,
-          attempted_at: new Date(),
-          details: { error: apiResult.error }
+          source: "api",
+          status: "not_found",
+          errorMessage: errorMessage,
+          searchedAt: new Date()
         });
 
         return res.status(404).json({
           success: false,
-          message: "No data found or failed to fetch"
+          message: errorMessage
         });
       }
     }
 
-    // ✅ always log attempt (duplicate bhi chalega)
-    await PhoneAttempt.create({
-      phone_number,
-      full_name: savedPhone.full_name || parsedData?.full_name || null,
-      cnic: savedPhone.cnic || parsedData?.cnic || null,
-      address: savedPhone.address || parsedData?.address || null,
-      details: savedPhone.details || parsedData || null,
-      raw_html: null,
-      attempted_at: new Date()
+    // ✅ Log successful search in SearchHistory
+    await SearchHistory.create({
+      userId: user._id,
+      userName: user.name,
+      userEmail: user.email,
+      phone_number: savedPhone.phone_number,
+      full_name: savedPhone.full_name,
+      cnic: savedPhone.cnic,
+      address: savedPhone.address,
+      source: source,
+      status: "found",
+      searchedAt: new Date()
     });
 
     return res.json({

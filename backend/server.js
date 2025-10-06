@@ -25,10 +25,10 @@ const MONGO_URI = "mongodb://127.0.0.1:27017/phone_api_db";
 mongoose
   .connect(MONGO_URI)
   .then(() => {
-    console.log("✅ MongoDB connected successfully");
+    console.log("MongoDB connected successfully");
     // console.log("📁 Database name:", mongoose.connection.name);
   })
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => console.error("MongoDB connection error:", err));
 
 // ====== BROWSER SETUP ======
 const WEBSITE_URL = "https://simownerdetails.org.pk/sim-database/";
@@ -178,7 +178,7 @@ app.post("/api/auth/register", [
 
     const token = generateToken(user._id);
 
-    console.log(`✅ New user registered: ${email}`);
+    console.log(` New user registered: ${email}`);
 
     res.status(201).json({
       success: true,
@@ -249,7 +249,7 @@ app.post("/api/auth/login", [
 
     const token = generateToken(user._id);
 
-    console.log(`✅ User logged in: ${email}`);
+    console.log(`User logged in: ${email}`);
 
     res.json({
       success: true,
@@ -295,7 +295,7 @@ app.get("/api/auth/me", authenticate, async (req, res) => {
 // Logout
 app.post("/api/auth/logout", authenticate, async (req, res) => {
   try {
-    console.log(`✅ User logged out: ${req.user.email}`);
+    console.log(`User logged out: ${req.user.email}`);
     
     res.json({
       success: true,
@@ -615,14 +615,14 @@ process.on('SIGINT', async () => {
 
 // Start server
 const server = app.listen(5000, () => {
-  console.log("\n🚀 Server running on http://localhost:5000");
-  console.log("📱 SIM Tracker API with Authentication\n");
+  console.log(" Server running on http://localhost:5000");
+  console.log("SIM Tracker API with Authentication\n");
   
   if (mongoose.connection.readyState === 1) {
-    console.log("✅ MongoDB is ready\n");
+    console.log(" MongoDB is ready\n");
   }
   
-  console.log("🔄 Starting automated number processing...\n");
+  console.log("Starting automated number processing...");
   processNumbers().catch(err => {
     console.error("Error in processNumbers:", err);
   });
