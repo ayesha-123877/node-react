@@ -5,11 +5,11 @@ export default function Sidebar() {
   const location = useLocation();
 
   const links = [
-    { to: "/dashboard", label: "📊 Dashboard" },
-    { to: "/simlookup", label: "🔍 SIM Lookup" },
-    { to: "/cniclookup", label: "🆔 CNIC Lookup" },
-    { to: "/history", label: "📜 History" },
-    { to: "/settings", label: "⚙️ Settings" },
+    { to: "/dashboard", label: " Dashboard" },
+    { to: "/simlookup", label: " SIM Lookup" },
+    // { to: "/cniclookup", label: " CNIC Lookup" },
+    { to: "/history", label: " History" },
+    { to: "/settings", label: " Settings" },
   ];
 
   return (

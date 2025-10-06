@@ -1,3 +1,4 @@
+// src/pages/SIMLookup.jsx
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import API from "../requests";
@@ -15,7 +16,6 @@ export default function SIMLookup({ onSearch }) {
       setSim(querySim);
       lookupSim(querySim);
     } else {
-      // Clear result when no query param
       setResult(null);
       setError("");
     }
@@ -29,7 +29,6 @@ export default function SIMLookup({ onSearch }) {
     }
     setError("");
     lookupSim(sim);
-
     if (onSearch) onSearch(sim);
   }
 
@@ -39,31 +38,26 @@ export default function SIMLookup({ onSearch }) {
     setResult(null);
 
     try {
-      // Step 1: Check if number exists in database
       const dbRes = await API.get(`/lookup/${simNumber}`);
-      
       if (dbRes.data.success && dbRes.data.data) {
-        // Data found in database
         setResult({
           sim: simNumber,
           owner: dbRes.data.data.full_name,
           cnic: dbRes.data.data.cnic,
           address: dbRes.data.data.address,
-          source: "database"
+          source: "database",
         });
         setSim("");
         setLoading(false);
         return;
       }
     } catch {
-      // If 404 or not found, continue to API scraping
-      console.log("Searching...");
+      console.log("Not found in DB, searching via API...");
     }
 
     try {
-      // Step 2: If not in DB, fetch from API using Puppeteer
-      const apiRes = await API.post(`/search-phone`, { 
-        phone_number: simNumber 
+      const apiRes = await API.post(`/search-phone`, {
+        phone_number: simNumber,
       });
 
       if (apiRes.data.success && apiRes.data.data) {
@@ -72,7 +66,7 @@ export default function SIMLookup({ onSearch }) {
           owner: apiRes.data.data.full_name,
           cnic: apiRes.data.data.cnic,
           address: apiRes.data.data.address,
-          source: "api"
+          source: "api",
         });
         setSim("");
       } else {
@@ -91,26 +85,36 @@ export default function SIMLookup({ onSearch }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4">🔎 SIM Lookup</h2>
-      
-      <form onSubmit={handleSubmit} className="flex gap-2 max-w-lg mb-6">
+    <div className="max-w-4xl mx-auto p-8">
+      {/* Heading */}
+      <h2 className="text-3xl font-bold mb-8 text-gray-800 border-l-8 border-blue-600 pl-4 py-2 bg-white shadow-sm rounded-r-lg inline-block">
+         SIM Lookup
+      </h2>
+
+      {/* Search Form */}
+      <form
+        onSubmit={handleSubmit}
+        className="flex gap-3 max-w-xl mb-6 bg-white p-4 rounded-xl shadow-md border"
+      >
         <input
           type="text"
           value={sim}
           onChange={(e) => setSim(e.target.value)}
           placeholder="Enter Phone number (0300XXXXXXX)"
-          className="flex-1 px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700"
           disabled={loading}
         />
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed min-w-[120px] flex items-center justify-center"
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
         >
           {loading ? (
             <>
-              <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+              <svg
+                className="animate-spin h-5 w-5 mr-2"
+                viewBox="0 0 24 24"
+              >
                 <circle
                   className="opacity-25"
                   cx="12"
@@ -134,16 +138,21 @@ export default function SIMLookup({ onSearch }) {
         </button>
       </form>
 
+      {/* Error Message */}
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded">
-          <p className="text-red-600">{error}</p>
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm">
+          <p className="text-red-600 font-medium">{error}</p>
         </div>
       )}
 
+      {/* Loading Message */}
       {loading && (
-        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded">
-          <p className="text-blue-600 flex items-center">
-            <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
+          <p className="text-blue-600 flex items-center font-medium">
+            <svg
+              className="animate-spin h-5 w-5 mr-2"
+              viewBox="0 0 24 24"
+            >
               <circle
                 className="opacity-25"
                 cx="12"
@@ -159,40 +168,50 @@ export default function SIMLookup({ onSearch }) {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            Loading please wait.
+            Loading, please wait...
           </p>
         </div>
       )}
 
+      {/* Result Card */}
       {result && !loading && (
-        <div className="bg-white shadow-lg rounded-lg border overflow-hidden">
+        <div className="bg-white shadow-lg rounded-xl border overflow-hidden">
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
             <h3 className="text-xl font-semibold text-white">Search Result</h3>
             <p className="text-blue-100 text-sm mt-1">
-              {/* Source: {result.source === "database" ? "Database" : "Live API"} */}
+              Source:{" "}
+              {result.source === "database" ? "Database" : "Live API"}
             </p>
           </div>
-          
+
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
                 <p className="text-sm text-gray-600 mb-1">SIM Number</p>
-                <p className="text-lg font-semibold text-gray-900">{result.sim}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {result.sim}
+                </p>
               </div>
-              
-              <div className="bg-gray-50 p-4 rounded">
+
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
                 <p className="text-sm text-gray-600 mb-1">Owner Name</p>
-                <p className="text-lg font-semibold text-gray-900">{result.owner || "N/A"}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {result.owner || "N/A"}
+                </p>
               </div>
-              
-              <div className="bg-gray-50 p-4 rounded">
+
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
                 <p className="text-sm text-gray-600 mb-1">CNIC</p>
-                <p className="text-lg font-semibold text-gray-900">{result.cnic || "N/A"}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {result.cnic || "N/A"}
+                </p>
               </div>
-              
-              <div className="bg-gray-50 p-4 rounded md:col-span-2">
+
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm md:col-span-2">
                 <p className="text-sm text-gray-600 mb-1">Address</p>
-                <p className="text-lg font-semibold text-gray-900">{result.address || "N/A"}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {result.address || "N/A"}
+                </p>
               </div>
             </div>
           </div>
