@@ -98,7 +98,7 @@ export default function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <p className="text-sm mt-4 text-center">
+        {/* <p className="text-sm mt-4 text-center">
           Don’t have an account?{" "}
           <span
             className="text-blue-600 cursor-pointer"
@@ -106,7 +106,7 @@ export default function Login() {
           >
             Register
           </span>
-        </p>
+        </p> */}
       </form>
     </div>
   );

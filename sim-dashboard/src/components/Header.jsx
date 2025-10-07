@@ -1,7 +1,7 @@
 // src/components/Header.jsx
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { Signal } from "lucide-react"; // 👈 import an icon from lucide-react
+import { Signal } from "lucide-react"; 
 
 export default function Header() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function Header() {
           onClick={() => navigate("/dashboard")}
           className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition"
         >
-          <Signal size={24} className="text-white" /> {/* 👈 icon added */}
+          <Signal size={24} className="text-white" /> 
           <h1 className="text-xl font-bold tracking-wide">SIMTrackr</h1>
         </div>
 

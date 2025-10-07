@@ -5,7 +5,7 @@ import API from "../requests";
 import { Search, CalendarDays, BarChart3 } from "lucide-react"; 
 
 export default function Dashboard() {
-  const [totalLookups, setTotalLookups] = useState(0);
+  // const [totalLookups, setTotalLookups] = useState(0);
   const [todaysSearches, setTodaysSearches] = useState(0);
   const [userTotalSearches, setUserTotalSearches] = useState(0);
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function Dashboard() {
     try {
       const res = await API.get("/dashboard/stats");
       if (res.data.success) {
-        setTotalLookups(res.data.data.totalLookups);
+        // setTotalLookups(res.data.data.totalLookups);
         setTodaysSearches(res.data.data.todaysSearches);
         setUserTotalSearches(res.data.data.userTotalSearches);
       }
@@ -36,14 +36,14 @@ export default function Dashboard() {
       {/* Stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
         {/* Total SIM Lookups */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-8 rounded-2xl shadow-lg border border-blue-200 hover:scale-105 transition-transform">
+        {/* <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-8 rounded-2xl shadow-lg border border-blue-200 hover:scale-105 transition-transform">
           <div className="flex items-center gap-3 mb-3">
             <Search size={28} className="text-white" />
             <h3 className="text-lg font-semibold">Total SIM Lookups</h3>
           </div>
           <p className="text-4xl font-bold">{totalLookups}</p>
           <p className="text-sm mt-2 opacity-80">System-wide</p>
-        </div>
+        </div> */}
 
         {/* Today's Searches */}
         <div className="bg-gradient-to-r from-green-500 to-green-700 text-white p-8 rounded-2xl shadow-lg border border-green-200 hover:scale-105 transition-transform">

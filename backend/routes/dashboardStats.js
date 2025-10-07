@@ -8,7 +8,7 @@ const { authenticate } = require("../middleware/auth");
 router.get("/stats", authenticate, async (req, res) => {
   try {
     // Total lookups in system (global count)
-    const totalLookups = await PhoneNumber.countDocuments();
+    // const totalLookups = await PhoneNumber.countDocuments();
 
     // Today's searches for THIS user only
     const startOfToday = new Date();
@@ -27,7 +27,7 @@ router.get("/stats", authenticate, async (req, res) => {
     res.json({
       success: true,
       data: {
-        totalLookups,
+        // totalLookups,
         todaysSearches,
         userTotalSearches
       }
