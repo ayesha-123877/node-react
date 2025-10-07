@@ -1,7 +1,8 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../requests"; // axios instance
+import API from "../requests";
+import { Search, CalendarDays, BarChart3 } from "lucide-react"; 
 
 export default function Dashboard() {
   const [totalLookups, setTotalLookups] = useState(0);
@@ -28,25 +29,38 @@ export default function Dashboard() {
 
   return (
     <main className="p-8 pt-16 bg-gray-50 min-h-screen">
-   <h2 className="text-3xl font-bold mb-10 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-8 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
-  Dashboard
-</h2>
-
+      <h2 className="text-3xl font-bold mb-10 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-8 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
+        Dashboard
+      </h2>
 
       {/* Stats cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        {/* Total SIM Lookups */}
         <div className="bg-gradient-to-r from-blue-500 to-blue-700 text-white p-8 rounded-2xl shadow-lg border border-blue-200 hover:scale-105 transition-transform">
-          <h3 className="text-lg font-semibold mb-2">🔎 Total SIM Lookups</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <Search size={28} className="text-white" />
+            <h3 className="text-lg font-semibold">Total SIM Lookups</h3>
+          </div>
           <p className="text-4xl font-bold">{totalLookups}</p>
           <p className="text-sm mt-2 opacity-80">System-wide</p>
         </div>
+
+        {/* Today's Searches */}
         <div className="bg-gradient-to-r from-green-500 to-green-700 text-white p-8 rounded-2xl shadow-lg border border-green-200 hover:scale-105 transition-transform">
-          <h3 className="text-lg font-semibold mb-2">📅 Today's Searches</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <CalendarDays size={28} className="text-white" />
+            <h3 className="text-lg font-semibold">Today's Searches</h3>
+          </div>
           <p className="text-4xl font-bold">{todaysSearches}</p>
           <p className="text-sm mt-2 opacity-80">Your searches today</p>
         </div>
+
+        {/* Your Total Searches */}
         <div className="bg-gradient-to-r from-purple-500 to-purple-700 text-white p-8 rounded-2xl shadow-lg border border-purple-200 hover:scale-105 transition-transform">
-          <h3 className="text-lg font-semibold mb-2">📋 Your Total Searches</h3>
+          <div className="flex items-center gap-3 mb-3">
+            <BarChart3 size={28} className="text-white" />
+            <h3 className="text-lg font-semibold">Your Total Searches</h3>
+          </div>
           <p className="text-4xl font-bold">{userTotalSearches}</p>
           <p className="text-sm mt-2 opacity-80">All time</p>
         </div>
@@ -54,10 +68,9 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="bg-white shadow-md rounded-2xl p-8 border border-gray-200">
-       <h3 className="text-2xl font-semibold mb-6 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-6 py-3 rounded-2xl shadow-md border border-blue-200 inline-block">
-  Quick Actions
-</h3>
-
+        <h3 className="text-2xl font-semibold mb-6 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-6 py-3 rounded-2xl shadow-md border border-blue-200 inline-block">
+          Quick Actions
+        </h3>
 
         <div className="flex gap-4">
           <button
