@@ -10,7 +10,7 @@ let browser = null;
 // Initialize browser
 async function initBrowser() {
   if (!browser) {
-    console.log("🚀 Launching browser...");
+    console.log("Launching browser...");
     browser = await puppeteer.launch({
       headless: "new",
       args: [
@@ -23,7 +23,7 @@ async function initBrowser() {
         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       ]
     });
-    console.log("✅ Browser launched successfully");
+    console.log("Browser launched successfully");
   }
   return browser;
 }
@@ -41,7 +41,7 @@ async function searchPhoneWithPuppeteer(phone) {
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     });
 
-    console.log(`📡 Navigating to website for ${phone}...`);
+    console.log(`Navigating to website for ${phone}...`);
 
     await page.goto(WEBSITE_URL, {
       waitUntil: 'networkidle2',
@@ -52,11 +52,11 @@ async function searchPhoneWithPuppeteer(phone) {
     
     const phoneForSearch = phone.startsWith('0') ? phone.substring(1) : phone;
     
-    console.log(`⌨️  Typing phone number: ${phoneForSearch}`);
+    console.log(`Typing phone number: ${phoneForSearch}`);
     await page.type('input[name="searchdata"]', phoneForSearch, { delay: 100 });
     await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log(`🔍 Clicking search button...`);
+
+    console.log(`Clicking search button...`);
     await page.click('button[type="submit"]');
     
     await page.waitForFunction(
@@ -70,14 +70,14 @@ async function searchPhoneWithPuppeteer(phone) {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     const htmlContent = await page.content();
-    console.log(`✅ Results received, HTML length: ${htmlContent.length}`);
+    console.log(`Results received, HTML length: ${htmlContent.length}`);
     
     await page.close();
 
     return { success: true, data: htmlContent };
 
   } catch (error) {
-    console.error(`❌ Puppeteer Error for ${phone}:`, error.message);
+    console.error(`Puppeteer Error for ${phone}:`, error.message);
     
     if (page) {
       await page.close();
@@ -100,14 +100,14 @@ function parseHtmlData(htmlContent, phone) {
   let address = null;
 
   if (resultCard.length === 0) {
-    console.log(`❌ No result card found for ${phone}`);
+    console.log(`No result card found for ${phone}`);
     return null;
   }
 
   const firstCard = resultCard.first();
   const fields = firstCard.find(".field");
 
-  console.log(`📊 Found ${fields.length} fields in result card`);
+  console.log(`Found ${fields.length} fields in result card`);
 
   if (fields.length >= 4) {
     fullName = fields.eq(0).find("div").last().text().trim() || null;
@@ -116,7 +116,7 @@ function parseHtmlData(htmlContent, phone) {
   }
 
   if (fullName && cnic) {
-    console.log(`✅ Parsed data - Name: ${fullName}, CNIC: ${cnic}`);
+    console.log(`Parsed data - Name: ${fullName}, CNIC: ${cnic}`);
     return {
       full_name: fullName,
       cnic: cnic,
@@ -124,7 +124,7 @@ function parseHtmlData(htmlContent, phone) {
     };
   }
 
-  console.log(`⚠️  Data incomplete for ${phone}`);
+  console.log(`Data incomplete for ${phone}`);
   return null;
 }
 
@@ -132,7 +132,7 @@ function parseHtmlData(htmlContent, phone) {
 async function closeBrowser() {
   if (browser) {
     await browser.close();
-    console.log('🔒 Browser closed');
+    console.log('Browser closed');
     browser = null;
   }
 }

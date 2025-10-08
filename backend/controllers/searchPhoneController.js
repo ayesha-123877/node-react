@@ -145,7 +145,7 @@ exports.searchPhone = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Search phone error:", error);
+    console.error("Search phone error:", error);
     return res.status(500).json({
       success: false,
       message: "Server error during search"

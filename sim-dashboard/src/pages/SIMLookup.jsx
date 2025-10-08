@@ -37,7 +37,7 @@ export default function SIMLookup({ onSearch }) {
     setResult(null);
 
     try {
-      // 1️⃣ Try getting data from database
+      // Try getting data from database
       const dbRes = await API.get(`/lookup/${simNumber}`);
       if (dbRes.data.success && dbRes.data.data) {
         setResult({
