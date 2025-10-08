@@ -12,7 +12,7 @@ exports.getUserHistory = async (req, res) => {
       data: history
     });
   } catch (error) {
-    console.error("❌ History fetch error:", error);
+    console.error("History fetch error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch search history"
@@ -40,7 +40,7 @@ exports.getHistoryItem = async (req, res) => {
       data: history
     });
   } catch (error) {
-    console.error("❌ History item fetch error:", error);
+    console.error("History item fetch error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch history item"
@@ -68,7 +68,7 @@ exports.deleteHistoryItem = async (req, res) => {
       message: "History item deleted successfully"
     });
   } catch (error) {
-    console.error("❌ History delete error:", error);
+    console.error("History delete error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to delete history item"
@@ -86,7 +86,7 @@ exports.clearAllHistory = async (req, res) => {
       message: `Deleted ${result.deletedCount} history items`
     });
   } catch (error) {
-    console.error("❌ Clear history error:", error);
+    console.error(" Clear history error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to clear history"

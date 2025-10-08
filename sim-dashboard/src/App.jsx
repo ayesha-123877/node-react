@@ -11,7 +11,6 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import SIMLookup from "./pages/SIMLookup";
-import CNICLookup from "./pages/CNICLookup";
 import History from "./pages/History";
 
 import Settings from "./pages/Settings";
@@ -69,14 +68,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/cniclookup"
-            element={
-              <ProtectedRoute>
-                <CNICLookup />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/history"
             element={

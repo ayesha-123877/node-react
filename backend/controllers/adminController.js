@@ -16,7 +16,7 @@ exports.getAllUsers = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("❌ Get users error:", error);
+    console.error(" Get users error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch users"
@@ -40,7 +40,7 @@ exports.getAllHistory = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("❌ Admin history fetch error:", error);
+    console.error(" Admin history fetch error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch search history"
@@ -90,7 +90,7 @@ exports.getStats = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error("❌ Admin stats error:", error);
+    console.error("Admin stats error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch statistics"

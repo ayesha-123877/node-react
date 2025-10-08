@@ -116,7 +116,7 @@ exports.searchPhone = async (req, res) => {
       });
 
       source = "api";
-      console.log(`✅ Data saved for ${phone_number}`);
+      console.log(` Data saved for ${phone_number}`);
     }
 
     // Log successful search in SearchHistory

@@ -13,8 +13,8 @@ const redis = new Redis({
   }
 });
 
-redis.on("connect", () => console.log("✅ Redis connected"));
-redis.on("error", (err) => console.error("❌ Redis error:", err));
+redis.on("connect", () => console.log(" Redis connected"));
+redis.on("error", (err) => console.error(" Redis error:", err));
 
 // Helper: safely stringify HTML
 function safeHtml(data) {
@@ -56,9 +56,9 @@ async function generateAndCacheNumbers() {
   
   try {
     await redis.set("phone_batch", JSON.stringify(numberList), "EX", 3600);
-    console.log(`📦 Stored ${numberList.length} numbers in Redis cache`);
+    console.log(`Stored ${numberList.length} numbers in Redis cache`);
   } catch (error) {
-    console.error("❌ Redis error:", error.message);
+    console.error(" Redis error:", error.message);
   }
 
   return numberList;
@@ -66,7 +66,7 @@ async function generateAndCacheNumbers() {
 
 // Main processing function
 async function processNumbers() {
-  console.log("🔄 Starting number processing...");
+  console.log(" Starting number processing...");
 
   try {
     const phoneNumbers = await generateAndCacheNumbers();
@@ -79,12 +79,12 @@ async function processNumbers() {
       // Skip if already exists in database
       const exists = await PhoneNumber.findOne({ phone_number: phone });
       if (exists) {
-        console.log(`⏭️  Skipped (already exists): ${phone}`);
+        console.log(`⏭ Skipped (already exists): ${phone}`);
         continue;
       }
 
       console.log(`\n${'='.repeat(60)}`);
-      console.log(`📱 Processing [${i + 1}/${phoneNumbers.length}]: ${phone}`);
+      console.log(` Processing [${i + 1}/${phoneNumbers.length}]: ${phone}`);
       console.log('='.repeat(60));
 
       // Scrape data from website
@@ -104,12 +104,12 @@ async function processNumbers() {
             details: JSON.stringify(parsedData)
           });
 
-          console.log(`✅ SUCCESS - Data saved for ${phone}`);
+          console.log(`SUCCESS - Data saved for ${phone}`);
           console.log(`   Name: ${parsedData.full_name}`);
           console.log(`   CNIC: ${parsedData.cnic}`);
           console.log(`   Address: ${parsedData.address || 'N/A'}`);
         } else {
-          console.log(`⚠️  Data found but incomplete - skipping save`);
+          console.log(`  Data found but incomplete - skipping save`);
         }
 
         // Save to PhoneAttempt for tracking
@@ -125,7 +125,7 @@ async function processNumbers() {
 
       } else {
         // Puppeteer failed - save failed attempt
-        console.log(`❌ Failed to fetch data for ${phone}`);
+        console.log(` Failed to fetch data for ${phone}`);
         
         await PhoneAttempt.create({
           phone_number: phone,
@@ -140,16 +140,16 @@ async function processNumbers() {
 
       // Random delay between requests to avoid detection
       const delay = delayMin + Math.random() * (delayMax - delayMin);
-      console.log(`⏳ Waiting ${(delay / 1000).toFixed(1)} seconds before next request...\n`);
+      console.log(` Waiting ${(delay / 1000).toFixed(1)} seconds before next request...\n`);
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
 
   } catch (error) {
-    console.error("❌ Fatal error in processNumbers:", error);
+    console.error(" Fatal error in processNumbers:", error);
   }
 
   console.log("\n" + "=".repeat(60));
-  console.log("✅ Finished processing all numbers");
+  console.log(" Finished processing all numbers");
   console.log("=".repeat(60));
 }
 

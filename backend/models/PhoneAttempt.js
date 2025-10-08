@@ -10,5 +10,5 @@ const phoneAttemptSchema = new mongoose.Schema({
   raw_html: { type: String, default: null }
 });
 
-// ⚠️ koi unique index nahi banayenge
+
 module.exports = mongoose.model('PhoneAttempt', phoneAttemptSchema);

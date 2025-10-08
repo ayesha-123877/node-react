@@ -32,7 +32,7 @@ exports.register = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    console.log(`✅ New user registered: ${email}`);
+    console.log(` New user registered: ${email}`);
 
     res.status(201).json({
       success: true,
@@ -49,7 +49,7 @@ exports.register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Registration error:", error);
+    console.error(" Registration error:", error);
     res.status(500).json({
       success: false,
       message: "Registration failed. Please try again.",
@@ -100,7 +100,7 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    console.log(`✅ User logged in: ${email}`);
+    console.log(` User logged in: ${email}`);
 
     res.json({
       success: true,
@@ -118,7 +118,7 @@ exports.login = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Login error:", error);
+    console.error(" Login error:", error);
     res.status(500).json({
       success: false,
       message: "Login failed. Please try again."
@@ -146,7 +146,7 @@ exports.getCurrentUser = async (req, res) => {
 // Logout user
 exports.logout = async (req, res) => {
   try {
-    console.log(`✅ User logged out: ${req.user.email}`);
+    console.log(` User logged out: ${req.user.email}`);
     
     res.json({
       success: true,

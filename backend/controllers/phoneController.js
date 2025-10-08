@@ -90,7 +90,7 @@ exports.lookupSim = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("❌ Lookup error:", err);
+    console.error(" Lookup error:", err);
     res.status(500).json({
       success: false,
       error: "Server error",
