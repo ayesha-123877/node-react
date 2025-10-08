@@ -1,4 +1,3 @@
-// src/pages/SIMLookup.jsx
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import API from "../requests";
@@ -38,6 +37,7 @@ export default function SIMLookup({ onSearch }) {
     setResult(null);
 
     try {
+      // 1️⃣ Try getting data from database
       const dbRes = await API.get(`/lookup/${simNumber}`);
       if (dbRes.data.success && dbRes.data.data) {
         setResult({
@@ -56,9 +56,18 @@ export default function SIMLookup({ onSearch }) {
     }
 
     try {
-      const apiRes = await API.post(`/search-phone`, {
-        phone_number: simNumber,
-      });
+      // 2️⃣ Fetch data via API with authentication token
+      const token = localStorage.getItem("token");
+
+      const apiRes = await API.post(
+        `/search-phone`,
+        { phone_number: simNumber },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (apiRes.data.success && apiRes.data.data) {
         setResult({
@@ -73,7 +82,9 @@ export default function SIMLookup({ onSearch }) {
         setError("Data not found.");
       }
     } catch (err) {
-      if (err.response?.status === 404) {
+      if (err.response?.status === 401) {
+        setError("Unauthorized. Please log in again.");
+      } else if (err.response?.status === 404) {
         setError("Data not found.");
       } else {
         setError("Error fetching number details. Please try again.");
@@ -85,13 +96,11 @@ export default function SIMLookup({ onSearch }) {
   }
 
   return (
-   <div className="max-w-4xl mx-auto pt-16 px-8 pb-8">
-
+    <div className="max-w-4xl mx-auto pt-16 px-8 pb-8">
       {/* Heading */}
-     <h2 className="text-3xl font-bold mb-8 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-8 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
-  SIM Lookup
-</h2>
-
+      <h2 className="text-3xl font-bold mb-8 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-8 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
+        SIM Lookup
+      </h2>
 
       {/* Search Form */}
       <form
@@ -113,10 +122,7 @@ export default function SIMLookup({ onSearch }) {
         >
           {loading ? (
             <>
-              <svg
-                className="animate-spin h-5 w-5 mr-2"
-                viewBox="0 0 24 24"
-              >
+              <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <circle
                   className="opacity-25"
                   cx="12"
@@ -151,10 +157,7 @@ export default function SIMLookup({ onSearch }) {
       {loading && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
           <p className="text-blue-600 flex items-center font-medium">
-            <svg
-              className="animate-spin h-5 w-5 mr-2"
-              viewBox="0 0 24 24"
-            >
+            <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
               <circle
                 className="opacity-25"
                 cx="12"
@@ -181,8 +184,7 @@ export default function SIMLookup({ onSearch }) {
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
             <h3 className="text-xl font-semibold text-white">Search Result</h3>
             <p className="text-blue-100 text-sm mt-1">
-              Source:{" "}
-              {result.source === "database" ? "Database" : "Live API"}
+              Source: {result.source === "database" ? "Database" : "Live API"}
             </p>
           </div>
 
