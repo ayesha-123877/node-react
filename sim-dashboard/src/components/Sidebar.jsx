@@ -4,7 +4,7 @@ import {
   LayoutDashboard,
   Phone,
   History,
-  Settings,
+  
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -15,7 +15,7 @@ export default function Sidebar() {
     { to: "/simlookup", label: "SIM Lookup", icon: <Phone size={18} /> },
     // { to: "/cniclookup", label: "CNIC Lookup", icon: <IdCard size={18} /> }, // if you ever add CNIC lookup
     { to: "/history", label: "History", icon: <History size={18} /> },
-    { to: "/settings", label: "Settings", icon: <Settings size={18} /> },
+    
   ];
 
   return (
