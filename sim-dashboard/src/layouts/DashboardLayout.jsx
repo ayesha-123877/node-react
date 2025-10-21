@@ -6,25 +6,25 @@ export default function DashboardLayout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen flex bg-gray-50">
       {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      {/* Main section */}
-      <div className="flex flex-col flex-1 min-h-screen w-full">
+      {/* Main content area */}
+      <div className="flex flex-col flex-1 min-h-screen w-full transition-all duration-300">
         {/* Header */}
         <Header onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
 
-        {/* Content area */}
+        {/* Page Content */}
         <main
-          className={`flex-1 p-4 sm:p-6 lg:p-8 pt-20 transition-all duration-300 w-full ${
+          className={`flex-1 w-full transition-all duration-300 pt-20 px-4 sm:px-6 lg:px-8 ${
             isSidebarOpen ? "sm:ml-64" : "sm:ml-0"
           }`}
         >
-          {children}
+          <div className="max-w-7xl mx-auto w-full">{children}</div>
         </main>
       </div>
     </div>

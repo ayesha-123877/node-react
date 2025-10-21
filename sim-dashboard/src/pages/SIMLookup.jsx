@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import API from "../requests";
+import DashboardLayout from "../layouts/DashboardLayout";
 
-export default function SIMLookup({ onSearch }) {
+export default function SIMLookup() {
   const [sim, setSim] = useState("");
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
@@ -28,7 +29,6 @@ export default function SIMLookup({ onSearch }) {
     }
     setError("");
     lookupSim(sim);
-    if (onSearch) onSearch(sim);
   }
 
   async function lookupSim(simNumber) {
@@ -38,7 +38,6 @@ export default function SIMLookup({ onSearch }) {
 
     try {
       const token = localStorage.getItem("token");
-
       const dbRes = await API.get(`/lookup/${simNumber}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -52,7 +51,6 @@ export default function SIMLookup({ onSearch }) {
           source: "database",
         });
         setSim("");
-        setLoading(false);
         return;
       }
     } catch {
@@ -90,102 +88,74 @@ export default function SIMLookup({ onSearch }) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto pt-10 sm:pt-16 px-4 sm:px-6 lg:px-8 pb-10">
-      {/* Heading */}
-      <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-5 sm:px-8 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
-        SIM Lookup
-      </h2>
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 px-6 py-4 rounded-2xl shadow-md border border-blue-200 inline-block">
+          SIM Lookup
+        </h2>
 
-      {/* Search Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col sm:flex-row gap-3 max-w-xl mb-8 bg-white p-4 rounded-xl shadow-md border"
-      >
-        <input
-          type="text"
-          value={sim}
-          onChange={(e) => setSim(e.target.value)}
-          placeholder="Enter Phone number (0300XXXXXXX)"
-          className="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 text-sm sm:text-base"
-          disabled={loading}
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base transition"
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  fill="none"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Searching...
-            </>
-          ) : (
-            "Search"
-          )}
-        </button>
-      </form>
+       <form
+  onSubmit={handleSubmit}
+  className="flex flex-col sm:flex-row gap-3 max-w-xl mb-8 bg-white p-4 rounded-xl shadow-md border items-center sm:items-stretch"
+>
 
-      {/* Error Message */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm text-sm sm:text-base">
-          <p className="text-red-600 font-medium">{error}</p>
-        </div>
-      )}
+          <input
+            type="text"
+            value={sim}
+            onChange={(e) => setSim(e.target.value)}
+            placeholder="Enter Phone number (0300XXXXXXX)"
+            className="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 text-sm sm:text-base"
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base transition"
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Searching...
+              </>
+            ) : (
+              "Search"
+            )}
+          </button>
+        </form>
 
-      {/* Loading Message */}
-      {loading && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-sm text-sm sm:text-base">
-          <p className="text-blue-600 flex items-center font-medium">
-            <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-                fill="none"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-            Loading, please wait...
-          </p>
-        </div>
-      )}
-
-      {/* Result Card */}
-      {result && !loading && (
-        <div className="bg-white shadow-lg rounded-xl border overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-            <h3 className="text-lg sm:text-xl font-semibold text-white">
-              Search Result
-            </h3>
-            <p className="text-blue-100 text-xs sm:text-sm mt-1">
-              Source: {result.source === "database" ? "Database" : "Live API"}
-            </p>
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg shadow-sm text-sm sm:text-base">
+            <p className="text-red-600 font-medium">{error}</p>
           </div>
+        )}
 
-          <div className="p-5 sm:p-6 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {result && !loading && (
+          <div className="bg-white shadow-lg rounded-xl border overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+              <h3 className="text-lg sm:text-xl font-semibold text-white">
+                Search Result
+              </h3>
+              <p className="text-blue-100 text-xs sm:text-sm mt-1">
+                Source: {result.source === "database" ? "Database" : "Live API"}
+              </p>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
                 <p className="text-sm text-gray-600 mb-1">SIM Number</p>
                 <p className="text-base sm:text-lg font-semibold text-gray-900 break-all">
@@ -215,8 +185,8 @@ export default function SIMLookup({ onSearch }) {
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 }

@@ -57,11 +57,12 @@ export default function Header({ onToggleSidebar }) {
             </>
           )}
           <button
-            onClick={handleLogout}
-            className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-sm transition"
-          >
-            Logout
-          </button>
+  onClick={handleLogout}
+  className="px-3 py-1 bg-red-500 hover:bg-red-600 rounded text-white text-sm transition focus:outline-none focus:ring-0 border-none"
+>
+  Logout
+</button>
+
         </div>
       </div>
     </header>
