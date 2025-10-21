@@ -1,7 +1,7 @@
 const Redis = require("ioredis");
 const PhoneNumber = require("../models/PhoneNumber");
 const PhoneAttempt = require("../models/PhoneAttempt");
-const { searchPhoneWithPuppeteer, parseHtmlData } = require("../services/puppeteerService");
+const { searchPhoneMultiSource } = require("../services/puppeteerService");
 
 // Initialize Redis
 const redis = new Redis({
@@ -56,7 +56,7 @@ async function generateAndCacheNumbers() {
   
   try {
     await redis.set("phone_batch", JSON.stringify(numberList), "EX", 3600);
-    console.log(`Stored ${numberList.length} numbers in Redis cache`);
+    console.log(` Stored ${numberList.length} numbers in Redis cache`);
   } catch (error) {
     console.error(" Redis error:", error.message);
   }
@@ -64,14 +64,16 @@ async function generateAndCacheNumbers() {
   return numberList;
 }
 
-// Main processing function
+// Main processing function with multi-source support
 async function processNumbers() {
-  console.log(" Starting number processing...");
+  console.log("\n" + "=".repeat(60));
+  console.log("Starting Multi-Source Number Processing");
+  console.log("=".repeat(60));
 
   try {
     const phoneNumbers = await generateAndCacheNumbers();
-    const delayMin = parseInt(process.env.REQUEST_DELAY_MIN) || 8000;
-    const delayMax = parseInt(process.env.REQUEST_DELAY_MAX) || 12000;
+    const delayMin = parseInt(process.env.REQUEST_DELAY_MIN) || 15000;
+    const delayMax = parseInt(process.env.REQUEST_DELAY_MAX) || 20000;
 
     for (let i = 0; i < phoneNumbers.length; i++) {
       const phone = phoneNumbers[i];
@@ -79,7 +81,7 @@ async function processNumbers() {
       // Skip if already exists in database
       const exists = await PhoneNumber.findOne({ phone_number: phone });
       if (exists) {
-        console.log(`⏭ Skipped (already exists): ${phone}`);
+        console.log(`Skipped (already exists): ${phone}`);
         continue;
       }
 
@@ -87,52 +89,62 @@ async function processNumbers() {
       console.log(` Processing [${i + 1}/${phoneNumbers.length}]: ${phone}`);
       console.log('='.repeat(60));
 
-      // Scrape data from website
-      const apiResult = await searchPhoneWithPuppeteer(phone);
+      // Use multi-source scraper (tries PRIMARY then SECONDARY)
+      const apiResult = await searchPhoneMultiSource(phone);
 
-      if (apiResult.success) {
-        const htmlContent = apiResult.data;
-        const parsedData = parseHtmlData(htmlContent, phone);
+      if (apiResult.success && apiResult.data) {
+        const parsedData = apiResult.data;
 
-        if (parsedData && parsedData.full_name && parsedData.cnic) {
-          // Save to PhoneNumber collection
+        // Save to PhoneNumber collection
+        try {
           await PhoneNumber.create({
             phone_number: phone,
             full_name: parsedData.full_name,
             cnic: parsedData.cnic,
             address: parsedData.address,
-            details: JSON.stringify(parsedData)
+            details: JSON.stringify({
+              ...parsedData,
+              source: apiResult.source
+            })
           });
 
-          console.log(`SUCCESS - Data saved for ${phone}`);
+          console.log(` SUCCESS - Data saved`);
+          console.log(`   Source: ${apiResult.source}`);
           console.log(`   Name: ${parsedData.full_name}`);
           console.log(`   CNIC: ${parsedData.cnic}`);
           console.log(`   Address: ${parsedData.address || 'N/A'}`);
-        } else {
-          console.log(`  Data found but incomplete - skipping save`);
+        } catch (saveError) {
+          console.error(` Failed to save to PhoneNumber:`, saveError.message);
         }
 
         // Save to PhoneAttempt for tracking
-        await PhoneAttempt.create({
-          phone_number: phone,
-          full_name: parsedData?.full_name || null,
-          cnic: parsedData?.cnic || null,
-          address: parsedData?.address || null,
-          details: parsedData || {},
-          raw_html: safeHtml(htmlContent),
-          attempted_at: new Date()
-        });
+        try {
+          await PhoneAttempt.create({
+            phone_number: phone,
+            full_name: parsedData.full_name,
+            cnic: parsedData.cnic,
+            address: parsedData.address,
+            details: {
+              ...parsedData,
+              source: apiResult.source
+            },
+            raw_html: null,
+            attempted_at: new Date()
+          });
+        } catch (saveError) {
+          console.error(` Failed to save to PhoneAttempt:`, saveError.message);
+        }
 
       } else {
-        // Puppeteer failed - save failed attempt
-        console.log(` Failed to fetch data for ${phone}`);
+        // All sources failed
+        console.log(` Failed to fetch data from all sources for ${phone}`);
         
         await PhoneAttempt.create({
           phone_number: phone,
           full_name: null,
           cnic: null,
           address: null,
-          details: { error: apiResult.error },
+          details: { error: apiResult.error || "All sources failed" },
           raw_html: null,
           attempted_at: new Date()
         });
@@ -145,7 +157,7 @@ async function processNumbers() {
     }
 
   } catch (error) {
-    console.error(" Fatal error in processNumbers:", error);
+    console.error("Fatal error in processNumbers:", error);
   }
 
   console.log("\n" + "=".repeat(60));

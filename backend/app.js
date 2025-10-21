@@ -260,7 +260,7 @@ async function processNumbers() {
             console.log(`  CNIC: ${cnic}`);
             console.log(`  Address: ${address}`);
           } else {
-            console.log(`⚠️ Data found but incomplete - skipping save`);
+            console.log(` Data found but incomplete - skipping save`);
           }
         }
 

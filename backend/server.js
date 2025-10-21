@@ -38,6 +38,8 @@ async function startServer() {
   try {
     // Connect to MongoDB first
     await mongoose.connect(MONGO_URI);
+    console.log("MongoDB connection state:", mongoose.connection.readyState);
+
     console.log(" MongoDB connected successfully");
 
     // Start Express server only after DB is ready

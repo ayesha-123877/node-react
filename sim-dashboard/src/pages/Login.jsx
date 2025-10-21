@@ -1,7 +1,8 @@
 // src/pages/Login.jsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../requests"; //  apna axios instance use ho raha hai
+import API from "../requests";
+import AuthLayout from "../layouts/AuthLayout";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,12 +11,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // agar token already h to dashboard redirect
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      navigate("/dashboard");
-    }
+    if (token) navigate("/dashboard");
   }, [navigate]);
 
   async function handleSubmit(e) {
@@ -27,7 +25,6 @@ export default function Login() {
       const res = await API.post("/auth/login", { email, password });
 
       if (res.data.success) {
-        //  Save token and user info
         localStorage.setItem("token", res.data.data.token);
         localStorage.setItem(
           "user",
@@ -36,78 +33,71 @@ export default function Login() {
             email: res.data.data.user.email,
           })
         );
-
         navigate("/dashboard");
       } else {
         setError(res.data.message || "Invalid credentials");
       }
     } catch (err) {
-      //  Axios error handling with status codes
       if (err.response) {
-        if (err.response.status === 400) {
-          setError(err.response.data.message || "Invalid input");
-        } else if (err.response.status === 401) {
-          setError(err.response.data.message || "Incorrect email or password");
-        } else if (err.response.status === 500) {
-          setError("Server error. Try again later.");
-        } else {
-          setError("Something went wrong. Please try again.");
-        }
-      } else {
-        setError("Network error. Please check your connection.");
-      }
-      console.error("Login error:", err);
+        if (err.response.status === 400) setError("Invalid input");
+        else if (err.response.status === 401) setError("Incorrect email or password");
+        else if (err.response.status === 500) setError("Server error. Try again later.");
+        else setError("Something went wrong.");
+      } else setError("Network error. Check your connection.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow w-80"
-      >
-        <h2 className="text-xl font-bold mb-4">Login</h2>
-
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+    <AuthLayout title="SIMTrackr Login">
+      <form onSubmit={handleSubmit}>
+        {error && (
+          <p className="text-red-500 text-sm mb-4 text-center font-medium">
+            {error}
+          </p>
+        )}
 
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border p-2 mb-2 rounded"
+          className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none rounded-lg p-3 mb-4 text-sm sm:text-base transition"
           required
         />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full border p-2 mb-4 rounded"
+          className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none rounded-lg p-3 mb-6 text-sm sm:text-base transition"
           required
         />
+
         <button
           type="submit"
           disabled={loading}
-          className={`w-full p-2 rounded text-white ${
-            loading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+          className={`w-full p-3 rounded-lg text-white text-sm sm:text-base font-semibold shadow-md transition ${
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        {/* <p className="text-sm mt-4 text-center">
+        <p className="text-center text-sm mt-5 text-gray-600">
           Don’t have an account?{" "}
           <span
-            className="text-blue-600 cursor-pointer"
+            className="text-blue-600 font-semibold cursor-pointer hover:underline"
             onClick={() => navigate("/register")}
           >
             Register
           </span>
-        </p> */}
+        </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }

@@ -34,10 +34,10 @@ const searchHistorySchema = new mongoose.Schema(
       default: null
     },
     source: {
-      type: String,
-      enum: ["database", "api", "lookup"],
-      default: "database"
-    },
+  type: String,
+  enum: ["database", "api", "lookup", "CNIC.PK", "SimOwnerDetails"],
+  default: "lookup",
+},
     status: {
       type: String,
       enum: ["found", "not_found"],
